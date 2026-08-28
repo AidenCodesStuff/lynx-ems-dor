@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lynx EMS FTO Daily Observation Report</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        lynx: { red: '#C00000', redLight: '#FDE8E8', redHover: '#A00000', black: '#000000', dark: '#222222', bg: '#F5F5F5', highlight: '#E0E0E0', border: '#D0D0D0', white: '#FFFFFF' }
+      },
+      fontFamily: {
+        display: ['Montserrat', 'sans-serif'],
+        body: ['Open Sans', 'sans-serif']
+      }
+    }
+  }
+};
+</script>
+<script src="https://unpkg.com/lucide@latest" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --lynx-red: #C00000;
+  --lynx-black: #000000;
+  --lynx-dark: #222222;
+  --lynx-bg: #F5F5F5;
+  --lynx-highlight: #E0E0E0;
+  --lynx-border: #D0D0D0;
+  --lynx-white: #FFFFFF;
+  --lynx-red-light: #FDE8E8;
+}
+* { box-sizing: border-box; }
+body { font-family: 'Open Sans', sans-serif; color: var(--lynx-dark); background: var(--lynx-bg); margin: 0; }
+h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
+input, select, textarea { font-family: 'Open Sans', sans-serif; }
+input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
+  width: 100%; background: var(--lynx-white); border: 1.5px solid var(--lynx-border);
+  border-radius: 6px; padding: 8px 12px; font-size: 14px; color: var(--lynx-dark);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--lynx-red); box-shadow: 0 0 0 3px rgba(192,0,0,0.12);
+}
+.section-header {
+  background: var(--lynx-black); color: var(--lynx-white); padding: 12px 18px;
+  font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 15px;
+  border-left: 4px solid var(--lynx-red); cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  border-radius: 4px 4px 0 0; user-select: none;
+}
+.section-header:hover { background: #1a1a1a; }
+.section-body {
+  max-height: 5000px; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease;
+  padding: 20px; background: var(--lynx-white); border: 1px solid #e5e5e5;
+  border-top: none; border-radius: 0 0 4px 4px;
+}
+.section-body.collapsed { max-height: 0; padding: 0 20px; overflow: hidden; }
+.sub-section-header {
+  background: #f0f0f0; color: var(--lynx-dark); padding: 10px 14px;
+  font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 13px;
+  border-left: 3px solid var(--lynx-red); cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  border-radius: 4px; user-select: none; margin-bottom: 12px; margin-top: 8px;
+}
+.sub-section-body { max-height: 3000px; overflow: hidden; transition: max-height 0.35s ease; }
+.sub-section-body.collapsed { max-height: 0; overflow: hidden; }
+.rating-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 38px; height: 32px; padding: 0 8px; border: 2px solid var(--lynx-border);
+  border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 600;
+  font-family: 'Montserrat', sans-serif; transition: all 0.15s ease;
+  background: var(--lynx-white); color: #666;
+}
+.rating-pill:hover { border-color: var(--lynx-red); color: var(--lynx-red); }
+.rating-pill.active { background: var(--lynx-red); color: var(--lynx-white); border-color: var(--lynx-red); }
+.outcome-card {
+  border: 2px solid var(--lynx-border); border-left: 5px solid var(--lynx-border);
+  border-radius: 8px; padding: 20px; cursor: pointer; transition: all 0.2s ease;
+  background: var(--lynx-white);
+}
+.outcome-card:hover { border-color: #999; }
+.outcome-card.selected { border-color: var(--lynx-red); border-left-color: var(--lynx-red); background: var(--lynx-red-light); }
+.skill-check { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; font-size: 13px; }
+.skill-check input[type="checkbox"] { display: none; }
+.skill-check .checkmark {
+  width: 20px; height: 20px; border: 2px solid var(--lynx-border); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: all 0.15s ease; background: var(--lynx-white);
+}
+.skill-check input:checked + .checkmark { background: var(--lynx-red); border-color: var(--lynx-red); }
+.skill-check input:checked + .checkmark::after {
+  content: '✓'; color: white; font-size: 14px; font-weight: 700;
+}
+.toggle-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 5px 14px;
+  border: 2px solid var(--lynx-border); border-radius: 999px; cursor: pointer;
+  font-size: 12px; font-weight: 600; transition: all 0.15s;
+  background: var(--lynx-white); color: #666;
+}
+.toggle-btn.active { background: var(--lynx-red); color: white; border-color: var(--lynx-red); }
+.toggle-btn:hover { border-color: var(--lynx-red); }
+.required-star { color: var(--lynx-red); font-weight: 700; }
+.field-label { font-size: 13px; font-weight: 600; color: var(--lynx-dark); margin-bottom: 4px; display: block; }
+.shake { animation: shake 0.4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+.records-panel {
+  position: fixed; top: 0; right: -480px; width: 460px; max-width: 100vw; height: 100vh;
+  background: var(--lynx-white); box-shadow: -4px 0 24px rgba(0,0,0,0.2);
+  z-index: 100; transition: right 0.35s ease; overflow-y: auto; padding: 0;
+}
+.records-panel.open { right: 0; }
+.records-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; display: none; }
+.records-overlay.open { display: block; }
+.btn-action {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px;
+  border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'Montserrat', sans-serif; transition: all 0.15s; border: none;
+}
+.btn-red { background: var(--lynx-red); color: white; }
+.btn-red:hover { background: #a00000; }
+.btn-gray { background: #e5e5e5; color: var(--lynx-dark); }
+.btn-gray:hover { background: #d5d5d5; }
+.btn-outline { background: transparent; border: 2px solid var(--lynx-border); color: var(--lynx-dark); }
+.btn-outline:hover { border-color: var(--lynx-red); color: var(--lynx-red); }
+.skill-group-label {
+  font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 13px;
+  color: #C00000; text-transform: uppercase; letter-spacing: 0.04em;
+  margin-top: 16px; margin-bottom: 6px; padding-bottom: 4px;
+  border-bottom: 2px solid #f0e0e0;
+}
+.skill-group-label:first-child { margin-top: 0; }
+
+@media print {
+  body { background: white !important; font-size: 11pt; }
+  .no-print, #sub-header-bar, #mobile-menu-btn-a1b2, #mobile-menu-a1b2, .records-panel, .records-overlay, footer { display: none !important; }
+  .section-body, .sub-section-body { max-height: none !important; padding: 16px !important; overflow: visible !important; }
+  .section-body.collapsed, .sub-section-body.collapsed { max-height: none !important; display: block !important; }
+  .section-header { background: #333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  input, select, textarea { border: 1px solid #ccc !important; box-shadow: none !important; }
+  .rating-pill.active { background: var(--lynx-red) !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .outcome-card.selected { background: #fef2f2 !important; border-left: 5px solid var(--lynx-red) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .skill-check input:checked + .checkmark { background: var(--lynx-red) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #print-footer { display: block !important; text-align: center; font-size: 10pt; color: #666; border-top: 1px solid #ccc; padding-top: 8px; margin-top: 24px; }
+  @page { margin: 0.6in; }
+}
+@media (max-width: 767px) {
+  .records-panel { width: 100vw; right: -100vw; }
+}
+</style>
+</head>
+<body data-id="0" class="min-h-screen">
+<app-icon data-id="1" hidden data-icon="activity" data-palette="Red"></app-icon>
+
+<!-- ===== TOP HEADER BAR ===== -->
+<header data-id="2" id="top-header-k3m9" class="w-full bg-lynx-black sticky top-0 z-50">
+  <div data-id="3" class="flex items-center justify-between px-4 md:px-6 py-3">
+    <div data-id="4" class="flex items-center gap-3">
+      <h1 data-id="5" class="font-display font-extrabold text-white text-lg md:text-[22px] tracking-tight">LYNX EMS</h1>
+    </div>
+    <div data-id="6" class="hidden md:block">
+      <h2 data-id="7" class="font-display font-semibold text-white text-base md:text-[18px] tracking-wide">DAILY OBSERVATION REPORT</h2>
+    </div>
+    <div data-id="8" class="flex items-center gap-3">
+      <svg data-id="9" viewBox="0 0 40 40" width="36" height="36" class="flex-shrink-0">
+        <polygon data-id="10" points="20,2 24,14 37,14 27,22 30,35 20,27 10,35 13,22 3,14 16,14" fill="#C00000" stroke="#fff" stroke-width="0.5"/>
+        <text data-id="11" x="20" y="24" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="Montserrat">EMS</text>
+      </svg>
+      <button data-id="12" id="mobile-menu-btn-a1b2" class="md:hidden p-2 text-white">
+        <i data-id="13" data-lucide="menu" class="w-6 h-6"></i>
+      </button>
+    </div>
+  </div>
+  <div data-id="14" class="h-1 bg-lynx-red"></div>
+</header>
+
+<!-- Mobile Menu -->
+<nav data-id="15" id="mobile-menu-a1b2" class="hidden fixed inset-0 bg-white z-[60] flex-col p-6">
+  <div data-id="16" class="flex justify-between items-center mb-6">
+    <span data-id="17" class="font-display font-bold text-lg">Menu</span>
+    <button data-id="18" id="mobile-menu-close-a1b2" class="p-2"><i data-id="19" data-lucide="x" class="w-6 h-6"></i></button>
+  </div>
+  <div data-id="20" class="flex flex-col gap-3">
+    <button data-id="21" class="mobile-action-btn btn-action btn-outline w-full justify-center" data-action="print"><i data-id="22" data-lucide="printer" class="w-4 h-4"></i> Print DOR</button>
+    <button data-id="23" class="mobile-action-btn btn-action btn-red w-full justify-center" data-action="save"><i data-id="24" data-lucide="save" class="w-4 h-4"></i> Save Record</button>
+    <button data-id="25" class="mobile-action-btn btn-action btn-outline w-full justify-center" data-action="new"><i data-id="26" data-lucide="file-plus" class="w-4 h-4"></i> New Form</button>
+    <button data-id="27" class="mobile-action-btn btn-action btn-outline w-full justify-center" data-action="records"><i data-id="28" data-lucide="folder-open" class="w-4 h-4"></i> View Records</button>
+  </div>
+</nav>
+
+<!-- ===== STICKY SUB-HEADER ===== -->
+<div data-id="29" id="sub-header-bar" class="sticky top-[53px] z-40 bg-lynx-bg border-b border-lynx-highlight shadow-sm no-print">
+  <div data-id="30" class="max-w-5xl mx-auto px-4 md:px-6 py-2 flex flex-wrap items-center justify-between gap-2">
+    <div data-id="31" class="flex items-center gap-3">
+      <span data-id="32" id="form-status-x9k2" class="font-display font-semibold text-sm text-lynx-dark">New DOR</span>
+      <span data-id="33" id="auto-save-indicator-p4q1" class="text-xs text-gray-400 hidden"></span>
+      <span data-id="34" id="record-count-badge-r7t3" class="text-xs bg-lynx-highlight text-lynx-dark px-2 py-0.5 rounded-full font-semibold"></span>
+    </div>
+    <div data-id="35" class="hidden md:flex items-center gap-2">
+      <button data-id="36" id="btn-print-d5f2" class="btn-action btn-outline text-xs"><i data-id="37" data-lucide="printer" class="w-4 h-4"></i> Print</button>
+      <button data-id="38" id="btn-save-g8h1" class="btn-action btn-red text-xs"><i data-id="39" data-lucide="save" class="w-4 h-4"></i> Save Record</button>
+      <button data-id="40" id="btn-new-j2k5" class="btn-action btn-outline text-xs"><i data-id="41" data-lucide="file-plus" class="w-4 h-4"></i> New Form</button>
+      <button data-id="42" id="btn-records-m3n6" class="btn-action btn-outline text-xs"><i data-id="43" data-lucide="folder-open" class="w-4 h-4"></i> View Records</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main data-id="44" class="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-5">
+
+  <!-- SECTION 1: Shift Information -->
+  <section data-id="45" id="section-shift-w4e7">
+    <div data-id="46" class="section-header" data-section="shift">
+      <span data-id="47"><i data-id="48" data-lucide="clock" class="w-4 h-4 inline mr-2"></i>SECTION 1 — Shift Information</span>
+      <i data-id="49" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="50" class="section-body" data-section-body="shift">
+      <div data-id="51" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+        <div data-id="52">
+          <label data-id="53" class="field-label">Date <span data-id="54" class="required-star">*</span></label>
+          <input data-id="55" type="date" id="field-date-a1" data-field="date" required>
+        </div>
+        <div data-id="56">
+          <label data-id="57" class="field-label">Shift <span data-id="58" class="required-star">*</span></label>
+          <select data-id="59" id="field-shift-b2" data-field="shift">
+            <option data-id="60" value="">— Select Shift —</option>
+            <option data-id="61" value="Day">Day</option>
+            <option data-id="62" value="Evening">Evening</option>
+            <option data-id="63" value="Night">Night</option>
+          </select>
+        </div>
+        <div data-id="64">
+          <label data-id="65" class="field-label">Shift Start Time <span data-id="66" class="required-star">*</span></label>
+          <input data-id="67" type="time" id="field-start-c3" data-field="shiftStart">
+        </div>
+        <div data-id="68">
+          <label data-id="69" class="field-label">Shift End Time <span data-id="70" class="required-star">*</span></label>
+          <input data-id="71" type="time" id="field-end-d4" data-field="shiftEnd">
+        </div>
+        <div data-id="72">
+          <label data-id="73" class="field-label">Unit / Vehicle #</label>
+          <input data-id="74" type="text" id="field-unit-e5" data-field="unitVehicle" placeholder="e.g. Medic 12">
+        </div>
+        <div data-id="75">
+          <label data-id="76" class="field-label">Station #</label>
+          <input data-id="77" type="text" id="field-station-f6" data-field="station" placeholder="e.g. Station 4">
+        </div>
+        <div data-id="78">
+          <label data-id="79" class="field-label">Service Area</label>
+          <input data-id="80" type="text" id="field-area-g7" data-field="serviceArea" placeholder="e.g. North District">
+        </div>
+        <div data-id="81">
+          <label data-id="82" class="field-label">Weather Conditions</label>
+          <select data-id="83" id="field-weather-h8" data-field="weather">
+            <option data-id="84" value="">— Select —</option>
+            <option data-id="85" value="Clear">Clear</option>
+            <option data-id="86" value="Rain">Rain</option>
+            <option data-id="87" value="Snow">Snow</option>
+            <option data-id="88" value="Fog">Fog</option>
+            <option data-id="89" value="Extreme Heat">Extreme Heat</option>
+            <option data-id="90" value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: Personnel Information -->
+  <section data-id="91" id="section-personnel-x5y8">
+    <div data-id="92" class="section-header" data-section="personnel">
+      <span data-id="93"><i data-id="94" data-lucide="users" class="w-4 h-4 inline mr-2"></i>SECTION 2 — Personnel Information</span>
+      <i data-id="95" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="96" class="section-body" data-section-body="personnel">
+      <div data-id="97" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+        <!-- LEFT: Trainee -->
+        <div data-id="98">
+          <h4 data-id="99" class="font-display font-bold text-sm text-lynx-red mb-3 uppercase tracking-wide border-b-2 border-lynx-red pb-1">Trainee</h4>
+          <div data-id="100" class="space-y-3">
+            <div data-id="101">
+              <label data-id="102" class="field-label">Full Name <span data-id="103" class="required-star">*</span></label>
+              <input data-id="104" type="text" id="field-trainee-name-i9" data-field="traineeName" placeholder="First Last">
+            </div>
+            <div data-id="105">
+              <label data-id="106" class="field-label">Employee / ID #</label>
+              <input data-id="107" type="text" id="field-trainee-id-j0" data-field="traineeId" placeholder="EMP-XXXX">
+            </div>
+            <div data-id="108">
+              <label data-id="109" class="field-label">Phase of Training <span data-id="110" class="required-star">*</span></label>
+              <select data-id="111" id="field-phase-k1" data-field="phase">
+                <option data-id="112" value="">— Select —</option>
+                <option data-id="113" value="Phase 1">Phase 1</option>
+                <option data-id="114" value="Phase 2">Phase 2</option>
+                <option data-id="115" value="Phase 3">Phase 3</option>
+                <option data-id="116" value="Phase 4">Phase 4</option>
+                <option data-id="117" value="Remedial">Remedial</option>
+              </select>
+            </div>
+            <div data-id="118">
+              <label data-id="119" class="field-label">Week in Phase</label>
+              <input data-id="120" type="number" id="field-week-l2" data-field="weekInPhase" min="1" max="8" placeholder="1–8">
+            </div>
+            <div data-id="121">
+              <label data-id="122" class="field-label">Certification Level</label>
+              <select data-id="123" id="field-cert-m3" data-field="traineeCert">
+                <option data-id="124" value="">— Select —</option>
+                <option data-id="125" value="EMT-Basic">EMT-Basic</option>
+                <option data-id="126" value="AEMT">AEMT</option>
+                <option data-id="127" value="Paramedic">Paramedic</option>
+                <option data-id="128" value="EMR">EMR</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <!-- RIGHT: FTO -->
+        <div data-id="129">
+          <h4 data-id="130" class="font-display font-bold text-sm text-lynx-red mb-3 uppercase tracking-wide border-b-2 border-lynx-red pb-1">Field Training Officer</h4>
+          <div data-id="131" class="space-y-3">
+            <div data-id="132">
+              <label data-id="133" class="field-label">FTO Full Name <span data-id="134" class="required-star">*</span></label>
+              <input data-id="135" type="text" id="field-fto-name-n4" data-field="ftoName" placeholder="First Last">
+            </div>
+            <div data-id="136">
+              <label data-id="137" class="field-label">FTO ID / Employee #</label>
+              <input data-id="138" type="text" id="field-fto-id-o5" data-field="ftoId" placeholder="EMP-XXXX">
+            </div>
+            <div data-id="139">
+              <label data-id="140" class="field-label">FTO Certification</label>
+              <select data-id="141" id="field-fto-cert-p6" data-field="ftoCert">
+                <option data-id="142" value="">— Select —</option>
+                <option data-id="143" value="EMT-Basic">EMT-Basic</option>
+                <option data-id="144" value="AEMT">AEMT</option>
+                <option data-id="145" value="Paramedic">Paramedic</option>
+              </select>
+            </div>
+            <div data-id="146">
+              <label data-id="147" class="field-label">Years as FTO</label>
+              <input data-id="148" type="number" id="field-fto-years-q7" data-field="ftoYears" min="0" max="40" placeholder="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: Call Log -->
+  <section data-id="149" id="section-calls-z8w1">
+    <div data-id="150" class="section-header" data-section="calls">
+      <span data-id="151"><i data-id="152" data-lucide="siren" class="w-4 h-4 inline mr-2"></i>SECTION 3 — Calls for Service</span>
+      <i data-id="153" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="154" class="section-body" data-section-body="calls">
+      <div data-id="155" class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <button data-id="156" id="btn-add-call-r8" class="btn-action btn-red text-xs"><i data-id="157" data-lucide="plus" class="w-4 h-4"></i> Add Call</button>
+        <div data-id="158" id="call-summary-s9" class="text-sm font-semibold text-lynx-dark font-display">Total Calls: 0 | Patient Contacts: 0</div>
+      </div>
+      <div data-id="159" class="overflow-x-auto">
+        <table data-id="160" class="w-full text-xs" id="call-table-t0">
+          <thead data-id="161">
+            <tr data-id="162" class="bg-gray-100 text-left">
+              <th data-id="163" class="px-2 py-2 font-display font-semibold">Run #</th>
+              <th data-id="164" class="px-2 py-2 font-display font-semibold">Dispatch</th>
+              <th data-id="165" class="px-2 py-2 font-display font-semibold">Clear</th>
+              <th data-id="166" class="px-2 py-2 font-display font-semibold">Call Type</th>
+              <th data-id="167" class="px-2 py-2 font-display font-semibold">Chief Complaint</th>
+              <th data-id="168" class="px-2 py-2 font-display font-semibold">Pt Contact</th>
+              <th data-id="169" class="px-2 py-2 font-display font-semibold">Role</th>
+              <th data-id="170" class="px-2 py-2 font-display font-semibold">Notes</th>
+              <th data-id="171" class="px-2 py-2"></th>
+            </tr>
+          </thead>
+          <tbody data-id="172" id="call-tbody-u1"></tbody>
+        </table>
+      </div>
+      <p data-id="173" id="no-calls-msg-v2" class="text-center text-gray-400 text-sm py-6 italic">No calls logged yet. Click "+ Add Call" to begin.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 4: Performance Evaluation -->
+  <section data-id="174" id="section-performance-a2b3">
+    <div data-id="175" class="section-header" data-section="performance">
+      <span data-id="176"><i data-id="177" data-lucide="bar-chart-3" class="w-4 h-4 inline mr-2"></i>SECTION 4 — Performance Ratings</span>
+      <i data-id="178" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="179" class="section-body" data-section-body="performance">
+      <!-- Rating Legend -->
+      <div data-id="180" class="bg-gray-50 rounded-lg p-3 mb-5 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
+        <span data-id="181" class="text-lynx-dark">Rating Key:</span>
+        <span data-id="182"><span data-id="183" class="inline-block w-5 h-5 rounded-full bg-red-700 text-white text-center leading-5 text-[10px] mr-1">1</span>Unacceptable</span>
+        <span data-id="184"><span data-id="185" class="inline-block w-5 h-5 rounded-full bg-orange-500 text-white text-center leading-5 text-[10px] mr-1">2</span>Needs Improvement</span>
+        <span data-id="186"><span data-id="187" class="inline-block w-5 h-5 rounded-full bg-yellow-500 text-white text-center leading-5 text-[10px] mr-1">3</span>Acceptable</span>
+        <span data-id="188"><span data-id="189" class="inline-block w-5 h-5 rounded-full bg-blue-500 text-white text-center leading-5 text-[10px] mr-1">4</span>Above Average</span>
+        <span data-id="190"><span data-id="191" class="inline-block w-5 h-5 rounded-full bg-green-600 text-white text-center leading-5 text-[10px] mr-1">5</span>Exceptional</span>
+        <span data-id="192"><span data-id="193" class="inline-block w-5 h-5 rounded-full bg-gray-400 text-white text-center leading-5 text-[10px] mr-1">N/O</span>Not Observed</span>
+      </div>
+      <div data-id="194" id="ratings-container-c4"></div>
+      <div data-id="195" class="mt-5 p-4 bg-gray-50 rounded-lg flex items-center justify-between">
+        <span data-id="196" class="font-display font-bold text-sm">Average Performance Score:</span>
+        <span data-id="197" id="avg-score-d5" class="font-display font-extrabold text-2xl text-lynx-red">—</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: Skills Observed This Shift -->
+  <section data-id="198" id="section-skills-e6f7">
+    <div data-id="199" class="section-header" data-section="skills">
+      <span data-id="200"><i data-id="201" data-lucide="stethoscope" class="w-4 h-4 inline mr-2"></i>SECTION 5 — Skills Observed This Shift</span>
+      <i data-id="202" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="203" class="section-body" data-section-body="skills">
+      <div data-id="204" id="skills-grid-g8"></div>
+      <div data-id="205" class="mt-3 text-xs text-gray-500 font-semibold">Skills checked: <span data-id="206" id="skills-count-h9">0</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 6: Written Narrative -->
+  <section data-id="207" id="section-narrative-i0j1">
+    <div data-id="208" class="section-header" data-section="narrative">
+      <span data-id="209"><i data-id="210" data-lucide="file-text" class="w-4 h-4 inline mr-2"></i>SECTION 6 — FTO Narrative</span>
+      <i data-id="211" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="212" class="section-body" data-section-body="narrative">
+      <label data-id="213" class="field-label">FTO Narrative <span data-id="214" class="required-star">*</span></label>
+      <textarea data-id="215" id="field-narrative-k2" data-field="narrative" rows="7" style="min-height:180px" placeholder="Describe trainee performance in detail. Include specific call examples, noted strengths, areas for improvement, and recommended focus areas for next shift..."></textarea>
+      <div data-id="216" class="text-right text-xs text-gray-400 mt-1"><span data-id="217" id="narrative-count-l3">0</span> characters</div>
+
+      <div data-id="218" class="mt-6">
+        <label data-id="219" class="field-label">Trainee Self-Assessment</label>
+        <textarea data-id="220" id="field-self-assess-m4" data-field="selfAssessment" rows="4" placeholder="Trainee's own reflection on today's performance..."></textarea>
+        <div data-id="221" class="text-right text-xs text-gray-400 mt-1"><span data-id="222" id="self-assess-count-n5">0</span> characters</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 7: Outcome & Recommendations -->
+  <section data-id="223" id="section-outcome-o6p7">
+    <div data-id="224" class="section-header" data-section="outcome">
+      <span data-id="225"><i data-id="226" data-lucide="check-circle" class="w-4 h-4 inline mr-2"></i>SECTION 7 — Outcome & Recommendations</span>
+      <i data-id="227" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="228" class="section-body" data-section-body="outcome">
+      <div data-id="229" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="outcome-grid-q8">
+        <div data-id="230" class="outcome-card" data-outcome="pass">
+          <div data-id="231" class="flex items-start gap-3">
+            <span data-id="232" class="text-2xl">✅</span>
+            <div data-id="233">
+              <h4 data-id="234" class="font-display font-bold text-sm">Pass</h4>
+              <p data-id="235" class="text-xs text-gray-500 mt-1">Trainee met expectations for this phase</p>
+            </div>
+          </div>
+        </div>
+        <div data-id="236" class="outcome-card" data-outcome="conditional">
+          <div data-id="237" class="flex items-start gap-3">
+            <span data-id="238" class="text-2xl">⚠️</span>
+            <div data-id="239">
+              <h4 data-id="240" class="font-display font-bold text-sm">Conditional Pass</h4>
+              <p data-id="241" class="text-xs text-gray-500 mt-1">Passed with noted deficiencies</p>
+            </div>
+          </div>
+        </div>
+        <div data-id="242" class="outcome-card" data-outcome="remediation">
+          <div data-id="243" class="flex items-start gap-3">
+            <span data-id="244" class="text-2xl">🔁</span>
+            <div data-id="245">
+              <h4 data-id="246" class="font-display font-bold text-sm">Remediation Required</h4>
+              <p data-id="247" class="text-xs text-gray-500 mt-1">Specific skills need review</p>
+            </div>
+          </div>
+        </div>
+        <div data-id="248" class="outcome-card" data-outcome="fail">
+          <div data-id="249" class="flex items-start gap-3">
+            <span data-id="250" class="text-2xl">❌</span>
+            <div data-id="251">
+              <h4 data-id="252" class="font-display font-bold text-sm">Did Not Pass</h4>
+              <p data-id="253" class="text-xs text-gray-500 mt-1">Trainee did not meet expectations</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <label data-id="254" class="field-label">Recommended Focus Areas for Next Shift</label>
+      <textarea data-id="255" id="field-focus-r9" data-field="focusAreas" rows="3" placeholder="List recommended areas of focus..."></textarea>
+    </div>
+  </section>
+
+  <!-- SECTION 8: Signatures -->
+  <section data-id="256" id="section-signatures-s0t1">
+    <div data-id="257" class="section-header" data-section="signatures">
+      <span data-id="258"><i data-id="259" data-lucide="pen-line" class="w-4 h-4 inline mr-2"></i>SECTION 8 — Signatures</span>
+      <i data-id="260" data-lucide="chevron-up" class="w-5 h-5 section-chevron"></i>
+    </div>
+    <div data-id="261" class="section-body" data-section-body="signatures">
+      <div data-id="262" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+        <!-- FTO Signature -->
+        <div data-id="263" class="bg-gray-50 rounded-lg p-5">
+          <h4 data-id="264" class="font-display font-bold text-sm text-lynx-red mb-3 uppercase tracking-wide">FTO Signature</h4>
+          <div data-id="265" class="space-y-3">
+            <div data-id="266">
+              <label data-id="267" class="field-label">Typed Name</label>
+              <input data-id="268" type="text" id="field-fto-sig-u2" data-field="ftoSig" placeholder="FTO Full Name">
+            </div>
+            <div data-id="269">
+              <label data-id="270" class="field-label">Date / Time</label>
+              <input data-id="271" type="text" id="field-fto-sig-dt-v3" data-field="ftoSigDt" readonly class="bg-gray-100">
+            </div>
+            <label data-id="272" class="flex items-start gap-2 cursor-pointer text-xs">
+              <input data-id="273" type="checkbox" id="field-fto-certify-w4" data-field="ftoCertify" class="mt-0.5 accent-[#C00000]">
+              <span data-id="274">I certify this DOR is accurate and complete <span data-id="275" class="required-star">*</span></span>
+            </label>
+          </div>
+        </div>
+        <!-- Trainee Signature -->
+        <div data-id="276" class="bg-gray-50 rounded-lg p-5">
+          <h4 data-id="277" class="font-display font-bold text-sm text-lynx-red mb-3 uppercase tracking-wide">Trainee Acknowledgment</h4>
+          <div data-id="278" class="space-y-3">
+            <div data-id="279">
+              <label data-id="280" class="field-label">Typed Name</label>
+              <input data-id="281" type="text" id="field-trainee-sig-x5" data-field="traineeSig" placeholder="Trainee Full Name">
+            </div>
+            <div data-id="282">
+              <label data-id="283" class="field-label">Date / Time</label>
+              <input data-id="284" type="text" id="field-trainee-sig-dt-y6" data-field="traineeSigDt" readonly class="bg-gray-100">
+            </div>
+            <label data-id="285" class="flex items-start gap-2 cursor-pointer text-xs">
+              <input data-id="286" type="checkbox" id="field-trainee-ack-z7" data-field="traineeAck" class="mt-0.5 accent-[#C00000]">
+              <span data-id="287">I acknowledge receipt of this DOR <span data-id="288" class="required-star">*</span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div data-id="289" class="mt-6">
+        <button data-id="290" id="btn-finalize-a8b9" class="w-full btn-action btn-red justify-center py-4 text-base font-display font-bold tracking-wide rounded-lg text-lg">
+          <i data-id="291" data-lucide="shield-check" class="w-5 h-5"></i> FINALIZE & SAVE RECORD
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Print Footer -->
+<div data-id="292" id="print-footer" style="display:none" class="text-center text-sm text-gray-500 border-t pt-2 mt-6">
+  LYNX EMS CONFIDENTIAL — FOR INTERNAL USE ONLY
+</div>
+
+<!-- Records Overlay & Panel -->
+<div data-id="293" id="records-overlay-c0" class="records-overlay"></div>
+<div data-id="294" id="records-panel-d1" class="records-panel">
+  <div data-id="295" class="sticky top-0 bg-lynx-black text-white p-4 flex items-center justify-between z-10">
+    <h3 data-id="296" class="font-display font-bold text-base"><i data-id="297" data-lucide="folder-open" class="w-5 h-5 inline mr-2"></i>Saved Records</h3>
+    <button data-id="298" id="btn-close-records-e2" class="text-white p-1 hover:text-lynx-red"><i data-id="299" data-lucide="x" class="w-5 h-5"></i></button>
+  </div>
+  <div data-id="300" class="p-4">
+    <input data-id="301" type="text" id="records-search-f3" placeholder="Search by trainee name or date..." class="mb-3 text-sm">
+    <div data-id="302" id="records-list-g4" class="space-y-2"></div>
+    <div data-id="303" class="mt-4 pt-3 border-t">
+      <button data-id="304" id="btn-export-all-h5" class="btn-action btn-outline w-full justify-center text-xs"><i data-id="305" data-lucide="download" class="w-4 h-4"></i> Export All Records (JSON)</button>
+    </div>
+  </div>
+</div>
+
+<footer data-id="306" class="no-print bg-lynx-black text-gray-400 text-center py-4 text-xs font-body mt-8">
+  <span data-id="307" class="text-lynx-red font-display font-bold">LYNX EMS</span> — Daily Observation Report System &nbsp;|&nbsp; Made by Copilot
+</footer>
+
+<script>
+// ===========================
+// Guard Lucide
+// ===========================
+if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+  lucide.createIcons();
+}
+
+// ===========================
+// STATE
+// ===========================
+let currentRecordId = null;
+let isReadOnly = false;
+let calls = [];
+let ratings = {};
+let selectedOutcome = '';
+let checkedSkills = new Set();
+let autoSaveTimer = null;
+
+const STORAGE_KEY = 'lynx_ems_dor_records';
+
+// ===========================
+// RATING CATEGORIES
+// ===========================
+const ratingGroups = [
+  { title: 'Patient Assessment', key: 'assessment', items: [
+    'Scene Size-Up & Safety', 'Primary Assessment (ABCs)', 'Secondary Assessment / Physical Exam',
+    'History Taking (SAMPLE, OPQRST)', 'Vital Signs (accuracy & frequency)', 'Clinical Decision Making'
+  ]},
+  { title: 'Patient Care & Treatment', key: 'care', items: [
+    'Treatment Protocol Adherence', 'ALS/BLS Skill Execution', 'Medication Administration (if applicable)',
+    'Documentation / PCR Accuracy', 'Patient Communication & Bedside Manner', 'Family/Bystander Communication'
+  ]},
+  { title: 'Operations & Vehicle', key: 'operations', items: [
+    'Response Driving (code & non-code)', 'Radio Communications', 'Equipment Checks & Maintenance',
+    'Scene Management', 'Hospital Notification & Handoff'
+  ]},
+  { title: 'Professionalism', key: 'professionalism', items: [
+    'Appearance & Uniform Compliance', 'Punctuality & Attendance', 'Initiative & Self-Motivation',
+    'Teamwork & Cooperation', 'Stress Management'
+  ]}
+];
+
+// ===========================
+// SKILLS LIST — Grouped for EMT-level transport & Lynx EMS Ops
+// ===========================
+const skillsGroups = [
+  {
+    title: 'Airway & Breathing',
+    skills: [
+      'OPA Insertion', 'NPA Insertion', 'Suction (oral/nasal)', 'BVM Ventilation',
+      'Oxygen Therapy (NRB)', 'Oxygen Therapy (Nasal Cannula)', 'CPAP Application', 'Assisted Ventilation'
+    ]
+  },
+  {
+    title: 'Circulation & Cardiac',
+    skills: [
+      'CPR (adult)', 'CPR (pediatric/infant)', 'AED Operation', 'Cardiac Monitoring (AED rhythm review)',
+      'Manual Blood Pressure', 'Pulse Oximetry', 'Blood Glucose Monitoring'
+    ]
+  },
+  {
+    title: 'Trauma & Bleeding Control',
+    skills: [
+      'Direct Pressure / Wound Packing', 'Tourniquet Application (SOFT-T / CAT)', 'Burn Management',
+      'Splinting (rigid / soft)', 'Traction Splint', 'C-Collar Application',
+      'Spinal Motion Restriction (SMR)', 'Long Spine Board / Scoop Stretcher', 'KED Application'
+    ]
+  },
+  {
+    title: 'Medication Administration (EMT-Authorized)',
+    skills: [
+      'Oral Glucose', 'Aspirin (ACS)', 'Epinephrine Auto-Injector', 'Albuterol (assisted MDI)',
+      'Naloxone (IN/IM)', 'Nitroglycerin (assisted)', 'Diphenhydramine (IM/IV)'
+    ]
+  },
+  {
+    title: 'Patient Movement & Equipment',
+    skills: [
+      'Power Stretcher / Cot Operation', 'Stair Chair Use', 'Scoop Stretcher Assembly',
+      'Loading / Unloading Ambulance', 'Patient Restraint (safety straps)',
+      'Bariatric Patient Handling', 'Lifting & Body Mechanics'
+    ]
+  },
+  {
+    title: 'Assessment & Clinical',
+    skills: [
+      'Primary Assessment (ABCDE)', 'Secondary Head-to-Toe Exam', 'Vital Signs (manual full set)',
+      'SAMPLE / OPQRST History', 'Stroke Assessment (FAST/Cincinnati)', 'Pediatric Assessment',
+      'OB / Childbirth Assist', 'Diabetic Emergency Management', 'Allergic Reaction / Anaphylaxis Care',
+      'Seizure Management', 'Behavioral / Psychiatric Patient Care', 'Heat / Cold Emergency Care'
+    ]
+  },
+  {
+    title: 'Transport & Operations (Lynx Specific)',
+    skills: [
+      'Interfacility Transport Protocol', 'Hospital Pre-notification (radio/phone)',
+      'Hospital Handoff Report (SBAR)', 'PCR / ePCR Documentation',
+      'Scene Safety & Size-Up', 'Radio Communications (dispatch/hospital)',
+      'Refusal of Care Documentation', 'Equipment Check (daily unit inspection)',
+      'Controlled Substance Security Check', 'Infection Control / PPE Donning & Doffing'
+    ]
+  }
+];
+
+// Build flat list for data compatibility
+const skillsList = skillsGroups.flatMap(g => g.skills);
+
+// ===========================
+// INIT
+// ===========================
+function init() {
+  setDefaultDate();
+  buildRatings();
+  buildSkills();
+  updateRecordCount();
+  setupCollapsibles();
+  setupCallLog();
+  setupOutcome();
+  setupSignatures();
+  setupButtons();
+  setupMobileMenu();
+  setupNarrativeCounters();
+  startAutoSave();
+}
+
+function setDefaultDate() {
+  const dateField = document.getElementById('field-date-a1');
+  dateField.value = '2026-08-26';
+  const now = '08/26/2026 10:31 PM';
+  document.getElementById('field-fto-sig-dt-v3').value = now;
+  document.getElementById('field-trainee-sig-dt-y6').value = now;
+}
+
+// ===========================
+// COLLAPSIBLE SECTIONS
+// ===========================
+function setupCollapsibles() {
+  document.querySelectorAll('.section-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const key = header.dataset.section;
+      const body = document.querySelector(`[data-section-body="${key}"]`);
+      const chevron = header.querySelector('.section-chevron');
+      body.classList.toggle('collapsed');
+      if (body.classList.contains('collapsed')) {
+        chevron.style.transform = 'rotate(180deg)';
+      } else {
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    });
+  });
+  document.querySelectorAll('.sub-section-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const body = header.nextElementSibling;
+      const chevron = header.querySelector('.sub-chevron');
+      body.classList.toggle('collapsed');
+      if (chevron) {
+        chevron.style.transform = body.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
+      }
+    });
+  });
+}
+
+// ===========================
+// PERFORMANCE RATINGS
+// ===========================
+function buildRatings() {
+  const container = document.getElementById('ratings-container-c4');
+  container.innerHTML = '';
+  ratingGroups.forEach(group => {
+    const groupDiv = document.createElement('div');
+    groupDiv.className = 'mb-4';
+    const subHeader = document.createElement('div');
+    subHeader.className = 'sub-section-header';
+    subHeader.innerHTML = `<span>${group.title}</span><i data-lucide="chevron-up" class="w-4 h-4 sub-chevron" style="transition:transform 0.2s"></i>`;
+    groupDiv.appendChild(subHeader);
+    const subBody = document.createElement('div');
+    subBody.className = 'sub-section-body';
+    group.items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'flex flex-col sm:flex-row sm:items-center justify-between py-2 border-b border-gray-100 gap-2';
+      const label = document.createElement('span');
+      label.className = 'text-sm font-medium text-lynx-dark';
+      label.textContent = item;
+      const pills = document.createElement('div');
+      pills.className = 'flex gap-1.5 flex-shrink-0';
+      ['1','2','3','4','5','N/O'].forEach(val => {
+        const pill = document.createElement('button');
+        pill.className = 'rating-pill';
+        pill.textContent = val;
+        pill.dataset.category = item;
+        pill.dataset.value = val;
+        pill.addEventListener('click', () => {
+          pills.querySelectorAll('.rating-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          ratings[item] = val;
+          updateAverageScore();
+        });
+        if (ratings[item] === val) pill.classList.add('active');
+        pills.appendChild(pill);
+      });
+      row.appendChild(label);
+      row.appendChild(pills);
+      subBody.appendChild(row);
+    });
+    groupDiv.appendChild(subBody);
+    container.appendChild(groupDiv);
+    subHeader.addEventListener('click', () => {
+      const chev = subHeader.querySelector('.sub-chevron');
+      subBody.classList.toggle('collapsed');
+      if (chev) chev.style.transform = subBody.classList.contains('collapsed') ? 'rotate(180deg)' : 'rotate(0deg)';
+    });
+  });
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") {
+    lucide.createIcons();
+  }
+}
+
+function updateAverageScore() {
+  const numericRatings = Object.values(ratings).filter(v => v !== 'N/O').map(Number);
+  const el = document.getElementById('avg-score-d5');
+  if (numericRatings.length === 0) { el.textContent = '—'; return; }
+  const avg = (numericRatings.reduce((a,b) => a+b, 0) / numericRatings.length).toFixed(2);
+  el.textContent = avg;
+}
+
+// ===========================
+// SKILLS CHECKLIST — Grouped
+// ===========================
+function buildSkills() {
+  const container = document.getElementById('skills-grid-g8');
+  container.innerHTML = '';
+
+  skillsGroups.forEach(group => {
+    // Group label
+    const groupLabel = document.createElement('div');
+    groupLabel.className = 'skill-group-label';
+    groupLabel.textContent = group.title;
+    container.appendChild(groupLabel);
+
+    // Grid of checkboxes for this group
+    const grid = document.createElement('div');
+    grid.className = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1 mb-2';
+
+    group.skills.forEach(skill => {
+      const lbl = document.createElement('label');
+      lbl.className = 'skill-check';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.dataset.skill = skill;
+      if (checkedSkills.has(skill)) cb.checked = true;
+      cb.addEventListener('change', () => {
+        if (cb.checked) checkedSkills.add(skill); else checkedSkills.delete(skill);
+        document.getElementById('skills-count-h9').textContent = checkedSkills.size;
+      });
+      const mark = document.createElement('span');
+      mark.className = 'checkmark';
+      const txt = document.createElement('span');
+      txt.textContent = skill;
+      lbl.appendChild(cb);
+      lbl.appendChild(mark);
+      lbl.appendChild(txt);
+      grid.appendChild(lbl);
+    });
+
+    container.appendChild(grid);
+  });
+
+  document.getElementById('skills-count-h9').textContent = checkedSkills.size;
+}
+
+// ===========================
+// CALL LOG
+// ===========================
+function setupCallLog() {
+  document.getElementById('btn-add-call-r8').addEventListener('click', addCall);
+  renderCalls();
+}
+
+function addCall() {
+  calls.push({ id: Date.now(), runNum: '', dispatch: '', clear: '', callType: '', complaint: '', patientContact: false, role: '', notes: '' });
+  renderCalls();
+}
+
+function renderCalls() {
+  const tbody = document.getElementById('call-tbody-u1');
+  const noMsg = document.getElementById('no-calls-msg-v2');
+  tbody.innerHTML = '';
+  if (calls.length === 0) { noMsg.style.display = ''; updateCallSummary(); return; }
+  noMsg.style.display = 'none';
+  calls.forEach((call, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-gray-100';
+    tr.innerHTML = `
+      <td class="px-1 py-1.5"><input type="text" class="call-input text-xs p-1" data-idx="${idx}" data-key="runNum" value="${esc(call.runNum)}" placeholder="#" style="width:55px"></td>
+      <td class="px-1 py-1.5"><input type="time" class="call-input text-xs p-1" data-idx="${idx}" data-key="dispatch" value="${esc(call.dispatch)}" style="width:90px"></td>
+      <td class="px-1 py-1.5"><input type="time" class="call-input text-xs p-1" data-idx="${idx}" data-key="clear" value="${esc(call.clear)}" style="width:90px"></td>
+      <td class="px-1 py-1.5">
+        <select class="call-input text-xs p-1" data-idx="${idx}" data-key="callType" style="width:120px">
+          <option value="">—</option>
+          <option value="Medical Emergency"${call.callType==='Medical Emergency'?' selected':''}>Medical Emergency</option>
+          <option value="Trauma"${call.callType==='Trauma'?' selected':''}>Trauma</option>
+          <option value="BLS Transport"${call.callType==='BLS Transport'?' selected':''}>BLS Transport</option>
+          <option value="ALS Transport"${call.callType==='ALS Transport'?' selected':''}>ALS Transport</option>
+          <option value="Cancelled"${call.callType==='Cancelled'?' selected':''}>Cancelled</option>
+          <option value="Mutual Aid"${call.callType==='Mutual Aid'?' selected':''}>Mutual Aid</option>
+          <option value="Other"${call.callType==='Other'?' selected':''}>Other</option>
+        </select>
+      </td>
+      <td class="px-1 py-1.5"><input type="text" class="call-input text-xs p-1" data-idx="${idx}" data-key="complaint" value="${esc(call.complaint)}" placeholder="Complaint" style="width:110px"></td>
+      <td class="px-1 py-1.5 text-center">
+        <button class="toggle-btn call-toggle text-xs ${call.patientContact?'active':''}" data-idx="${idx}" data-key="patientContact">${call.patientContact?'Yes':'No'}</button>
+      </td>
+      <td class="px-1 py-1.5">
+        <select class="call-input text-xs p-1" data-idx="${idx}" data-key="role" style="width:95px">
+          <option value="">—</option>
+          <option value="Driver"${call.role==='Driver'?' selected':''}>Driver</option>
+          <option value="Attendant"${call.role==='Attendant'?' selected':''}>Attendant</option>
+          <option value="Observer"${call.role==='Observer'?' selected':''}>Observer</option>
+        </select>
+      </td>
+      <td class="px-1 py-1.5"><input type="text" class="call-input text-xs p-1" data-idx="${idx}" data-key="notes" value="${esc(call.notes)}" placeholder="Notes" style="width:100px"></td>
+      <td class="px-1 py-1.5">
+        <button class="call-delete text-red-400 hover:text-red-700 p-1" data-idx="${idx}" title="Delete call">
+          <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Attach events
+  tbody.querySelectorAll('.call-input').forEach(inp => {
+    inp.addEventListener('change', (e) => {
+      const i = parseInt(e.target.dataset.idx);
+      const k = e.target.dataset.key;
+      calls[i][k] = e.target.value;
+      updateCallSummary();
+    });
+  });
+  tbody.querySelectorAll('.call-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const i = parseInt(e.target.dataset.idx);
+      calls[i].patientContact = !calls[i].patientContact;
+      renderCalls();
+    });
+  });
+  tbody.querySelectorAll('.call-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const i = parseInt(e.target.closest('.call-delete').dataset.idx);
+      calls.splice(i, 1);
+      renderCalls();
+    });
+  });
+
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+  updateCallSummary();
+}
+
+function updateCallSummary() {
+  const contacts = calls.filter(c => c.patientContact).length;
+  document.getElementById('call-summary-s9').textContent = `Total Calls: ${calls.length} | Patient Contacts: ${contacts}`;
+}
+
+function esc(str) { return (str||'').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+// ===========================
+// OUTCOME
+// ===========================
+function setupOutcome() {
+  document.querySelectorAll('.outcome-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.outcome-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedOutcome = card.dataset.outcome;
+    });
+  });
+}
+
+// ===========================
+// SIGNATURES
+// ===========================
+function setupSignatures() {
+  document.getElementById('field-fto-name-n4').addEventListener('input', (e) => {
+    document.getElementById('field-fto-sig-u2').value = e.target.value;
+  });
+  document.getElementById('field-trainee-name-i9').addEventListener('input', (e) => {
+    document.getElementById('field-trainee-sig-x5').value = e.target.value;
+  });
+}
+
+// ===========================
+// NARRATIVE COUNTERS
+// ===========================
+function setupNarrativeCounters() {
+  document.getElementById('field-narrative-k2').addEventListener('input', (e) => {
+    document.getElementById('narrative-count-l3').textContent = e.target.value.length;
+  });
+  document.getElementById('field-self-assess-m4').addEventListener('input', (e) => {
+    document.getElementById('self-assess-count-n5').textContent = e.target.value.length;
+  });
+}
+
+// ===========================
+// BUTTONS
+// ===========================
+function setupButtons() {
+  document.getElementById('btn-print-d5f2').addEventListener('click', () => window.print());
+  document.getElementById('btn-save-g8h1').addEventListener('click', () => saveRecord(false));
+  document.getElementById('btn-new-j2k5').addEventListener('click', resetForm);
+  document.getElementById('btn-records-m3n6').addEventListener('click', openRecords);
+  document.getElementById('btn-close-records-e2').addEventListener('click', closeRecords);
+  document.getElementById('records-overlay-c0').addEventListener('click', closeRecords);
+  document.getElementById('btn-finalize-a8b9').addEventListener('click', () => finalizeRecord());
+  document.getElementById('btn-export-all-h5').addEventListener('click', exportAll);
+  document.getElementById('records-search-f3').addEventListener('input', renderRecordsList);
+}
+
+// ===========================
+// MOBILE MENU
+// ===========================
+function setupMobileMenu() {
+  document.getElementById('mobile-menu-btn-a1b2').addEventListener('click', () => {
+    document.getElementById('mobile-menu-a1b2').classList.remove('hidden');
+    document.getElementById('mobile-menu-a1b2').classList.add('flex');
+  });
+  document.getElementById('mobile-menu-close-a1b2').addEventListener('click', () => {
+    document.getElementById('mobile-menu-a1b2').classList.add('hidden');
+    document.getElementById('mobile-menu-a1b2').classList.remove('flex');
+  });
+  document.querySelectorAll('.mobile-action-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('mobile-menu-a1b2').classList.add('hidden');
+      document.getElementById('mobile-menu-a1b2').classList.remove('flex');
+      const action = btn.dataset.action;
+      if (action === 'print') window.print();
+      else if (action === 'save') saveRecord(false);
+      else if (action === 'new') resetForm();
+      else if (action === 'records') openRecords();
+    });
+  });
+}
+
+// ===========================
+// COLLECT FORM DATA
+// ===========================
+function collectData() {
+  const data = {};
+  document.querySelectorAll('[data-field]').forEach(el => {
+    if (el.type === 'checkbox') data[el.dataset.field] = el.checked;
+    else data[el.dataset.field] = el.value;
+  });
+  data.calls = JSON.parse(JSON.stringify(calls));
+  data.ratings = Object.assign({}, ratings);
+  data.outcome = selectedOutcome;
+  data.skills = Array.from(checkedSkills);
+  return data;
+}
+
+// ===========================
+// LOAD FORM DATA
+// ===========================
+function loadData(data) {
+  document.querySelectorAll('[data-field]').forEach(el => {
+    if (data[el.dataset.field] !== undefined) {
+      if (el.type === 'checkbox') el.checked = data[el.dataset.field];
+      else el.value = data[el.dataset.field];
+    }
+  });
+  calls = data.calls || [];
+  ratings = data.ratings || {};
+  selectedOutcome = data.outcome || '';
+  checkedSkills = new Set(data.skills || []);
+  renderCalls();
+  buildRatings();
+  // Restore active ratings
+  Object.entries(ratings).forEach(([cat, val]) => {
+    document.querySelectorAll(`.rating-pill[data-category="${cat}"]`).forEach(pill => {
+      if (pill.dataset.value === val) pill.classList.add('active');
+    });
+  });
+  updateAverageScore();
+  buildSkills();
+  // Outcome
+  document.querySelectorAll('.outcome-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.outcome === selectedOutcome);
+  });
+  // Char counts
+  document.getElementById('narrative-count-l3').textContent = (data.narrative || '').length;
+  document.getElementById('self-assess-count-n5').textContent = (data.selfAssessment || '').length;
+}
+
+// ===========================
+// SAVE
+// ===========================
+function saveRecord(finalized) {
+  const data = collectData();
+  const records = getRecords();
+  const id = currentRecordId || Date.now();
+  const existing = records.findIndex(r => r.id === id);
+  const record = {
+    id, data, status: finalized ? 'Finalized' : 'Draft',
+    date: data.date, traineeName: data.traineeName, phase: data.phase, shift: data.shift,
+    outcome: data.outcome, savedAt: new Date().toISOString()
+  };
+  if (existing >= 0) records[existing] = record; else records.push(record);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  currentRecordId = id;
+  updateFormStatus(record);
+  updateRecordCount();
+  showAutoSaveIndicator(finalized ? 'Finalized!' : 'Saved');
+  return record;
+}
+
+function finalizeRecord() {
+  const required = [
+    { id: 'field-date-a1', label: 'Date' },
+    { id: 'field-shift-b2', label: 'Shift' },
+    { id: 'field-start-c3', label: 'Start Time' },
+    { id: 'field-end-d4', label: 'End Time' },
+    { id: 'field-trainee-name-i9', label: 'Trainee Name' },
+    { id: 'field-phase-k1', label: 'Phase' },
+    { id: 'field-fto-name-n4', label: 'FTO Name' },
+    { id: 'field-narrative-k2', label: 'Narrative' }
+  ];
+  let valid = true;
+  required.forEach(r => {
+    const el = document.getElementById(r.id);
+    if (!el.value.trim()) {
+      el.style.borderColor = '#C00000';
+      el.classList.add('shake');
+      setTimeout(() => { el.classList.remove('shake'); }, 500);
+      valid = false;
+    } else {
+      el.style.borderColor = '';
+    }
+  });
+  if (!document.getElementById('field-fto-certify-w4').checked) {
+    valid = false;
+    document.getElementById('field-fto-certify-w4').parentElement.style.color = '#C00000';
+    document.getElementById('field-fto-certify-w4').parentElement.classList.add('shake');
+    setTimeout(() => document.getElementById('field-fto-certify-w4').parentElement.classList.remove('shake'), 500);
+  }
+  if (!valid) return;
+
+  const record = saveRecord(true);
+  const btn = document.getElementById('btn-finalize-a8b9');
+  btn.style.background = '#16a34a';
+  btn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i> RECORD FINALIZED';
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+  setTimeout(() => {
+    btn.style.background = '';
+    btn.innerHTML = '<i data-lucide="shield-check" class="w-5 h-5"></i> FINALIZE & SAVE RECORD';
+    if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+  }, 3000);
+}
+
+// ===========================
+// RECORDS
+// ===========================
+function getRecords() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+
+function updateRecordCount() {
+  const count = getRecords().length;
+  document.getElementById('record-count-badge-r7t3').textContent = count > 0 ? `${count} record${count>1?'s':''}` : '';
+}
+
+function updateFormStatus(record) {
+  const el = document.getElementById('form-status-x9k2');
+  if (record) {
+    el.textContent = `Record #${record.id} — ${record.date || 'No date'} (${record.status})`;
+  } else {
+    el.textContent = 'New DOR';
+  }
+}
+
+function openRecords() {
+  document.getElementById('records-panel-d1').classList.add('open');
+  document.getElementById('records-overlay-c0').classList.add('open');
+  renderRecordsList();
+}
+
+function closeRecords() {
+  document.getElementById('records-panel-d1').classList.remove('open');
+  document.getElementById('records-overlay-c0').classList.remove('open');
+}
+
+function renderRecordsList() {
+  const list = document.getElementById('records-list-g4');
+  const search = document.getElementById('records-search-f3').value.toLowerCase();
+  const records = getRecords().filter(r => {
+    if (!search) return true;
+    return (r.traineeName || '').toLowerCase().includes(search) || (r.date || '').includes(search);
+  }).sort((a, b) => b.id - a.id);
+  if (records.length === 0) {
+    list.innerHTML = '<p class="text-center text-gray-400 text-sm py-8 italic">No records found.</p>';
+    return;
+  }
+  list.innerHTML = records.map(r => `
+    <div class="border rounded-lg p-3 text-xs hover:bg-gray-50 transition-colors">
+      <div class="flex justify-between items-start mb-1.5">
+        <div>
+          <span class="font-display font-bold text-sm">${esc(r.traineeName || 'Unknown')}</span>
+          <span class="ml-2 text-xs px-1.5 py-0.5 rounded ${r.status==='Finalized'?'bg-green-100 text-green-700':'bg-yellow-100 text-yellow-700'} font-semibold">${r.status}</span>
+        </div>
+      </div>
+      <div class="text-gray-500 flex flex-wrap gap-x-3 gap-y-0.5">
+        <span>${r.date || '—'}</span>
+        <span>${r.shift || '—'} Shift</span>
+        <span>${r.phase || '—'}</span>
+        <span class="capitalize">${r.outcome || '—'}</span>
+      </div>
+      <div class="flex gap-2 mt-2">
+        <button class="rec-view btn-action btn-outline text-[11px] py-1 px-2" data-rec-id="${r.id}"><i data-lucide="eye" class="w-3 h-3 pointer-events-none"></i> View</button>
+        <button class="rec-print btn-action btn-outline text-[11px] py-1 px-2" data-rec-id="${r.id}"><i data-lucide="printer" class="w-3 h-3 pointer-events-none"></i> Print</button>
+        <button class="rec-delete btn-action btn-outline text-[11px] py-1 px-2 text-red-500 border-red-300 hover:bg-red-50" data-rec-id="${r.id}"><i data-lucide="trash-2" class="w-3 h-3 pointer-events-none"></i> Delete</button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.rec-view').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.recId);
+      const rec = getRecords().find(r => r.id === id);
+      if (rec) {
+        currentRecordId = rec.id;
+        loadData(rec.data);
+        updateFormStatus(rec);
+        closeRecords();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  });
+  list.querySelectorAll('.rec-print').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.recId);
+      const rec = getRecords().find(r => r.id === id);
+      if (rec) {
+        currentRecordId = rec.id;
+        loadData(rec.data);
+        updateFormStatus(rec);
+        closeRecords();
+        setTimeout(() => window.print(), 300);
+      }
+    });
+  });
+  list.querySelectorAll('.rec-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.recId);
+      if (confirm('Delete this record permanently?')) {
+        const records = getRecords().filter(r => r.id !== id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        if (currentRecordId === id) { currentRecordId = null; updateFormStatus(null); }
+        renderRecordsList();
+        updateRecordCount();
+      }
+    });
+  });
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+}
+
+function exportAll() {
+  const records = getRecords();
+  const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'lynx_ems_dor_records.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===========================
+// RESET FORM
+// ===========================
+function resetForm() {
+  if (currentRecordId && !confirm('Start a new blank DOR? Unsaved changes will be lost.')) return;
+  currentRecordId = null;
+  document.querySelectorAll('[data-field]').forEach(el => {
+    if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+  });
+  calls = [];
+  ratings = {};
+  selectedOutcome = '';
+  checkedSkills = new Set();
+  renderCalls();
+  buildRatings();
+  buildSkills();
+  document.querySelectorAll('.outcome-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('narrative-count-l3').textContent = '0';
+  document.getElementById('self-assess-count-n5').textContent = '0';
+  updateFormStatus(null);
+  setDefaultDate();
+  const btn = document.getElementById('btn-finalize-a8b9');
+  btn.style.background = '';
+  btn.innerHTML = '<i data-lucide="shield-check" class="w-5 h-5"></i> FINALIZE & SAVE RECORD';
+  if (typeof lucide !== "undefined" && typeof lucide.createIcons === "function") lucide.createIcons();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===========================
+// AUTO-SAVE
+// ===========================
+function startAutoSave() {
+  setInterval(() => {
+    const data = collectData();
+    const hasContent = data.traineeName || data.ftoName || calls.length > 0 || data.narrative;
+    if (hasContent) {
+      saveRecord(false);
+      showAutoSaveIndicator('Auto-saved');
+    }
+  }, 60000);
+}
+
+function showAutoSaveIndicator(text) {
+  const el = document.getElementById('auto-save-indicator-p4q1');
+  const now = new Date();
+  const h = now.getHours(); const m = now.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  el.textContent = `${text} at ${h12}:${String(m).padStart(2,'0')} ${ampm}`;
+  el.classList.remove('hidden');
+}
+
+// ===========================
+// START
+// ===========================
+init();
+</script>
+</body>
+</html>
